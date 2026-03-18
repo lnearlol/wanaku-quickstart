@@ -66,7 +66,9 @@ Or open the Web UI at http://localhost:8080 (same credentials).
 
 ## Logs
 
-Each process writes to a separate log file:
+All logs are in the `logs/` directory — one file per process (Router + each Camel Integration Capability instance).
+
+To follow logs in real time:
 
 ```bash
 tail -f logs/router.log          # Router
