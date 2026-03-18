@@ -1,0 +1,13 @@
+- route:
+    id: read-file
+    autoStartup: false
+    from:
+      uri: file
+      parameters:
+        directoryName: examples/file-resource
+        fileName: readme.txt
+        idempotent: false
+        noop: true
+      steps:
+        - convertBodyTo:
+            type: java.lang.String

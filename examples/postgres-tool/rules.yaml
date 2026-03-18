@@ -1,0 +1,32 @@
+mcp:
+  tools:
+    - get-full-db-info:
+        route:
+          id: "get-full-db-info"
+        description: "Get all users with their IDs, names, and emails"
+
+    - custom-query:
+        route:
+          id: "custom-query"
+        description: "Run a custom SQL query against the database (e.g. SELECT name FROM users ORDER BY name)"
+        properties:
+          - name: query
+            type: string
+            description: "SQL query to execute (e.g. SELECT name FROM users ORDER BY name)"
+            required: true
+            mapping:
+              type: header
+              name: Wanaku.query
+
+    - get-email-by-name:
+        route:
+          id: "get-email-by-name"
+        description: "Get a user's email address by their name"
+        properties:
+          - name: name
+            type: string
+            description: "The user's name (e.g. Alice, Bob, Charlie)"
+            required: true
+            mapping:
+              type: header
+              name: Wanaku.name

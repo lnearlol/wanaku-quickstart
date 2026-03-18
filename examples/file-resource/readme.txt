@@ -1,0 +1,1 @@
+Hello from Wanaku! This file is served as an MCP resource via CIC.

@@ -1,0 +1,40 @@
+- beans:
+    - name: testDS
+      type: org.postgresql.ds.PGSimpleDataSource
+      properties:
+        url: "jdbc:postgresql://localhost:5432/wanaku"
+        user: "wanaku"
+        password: "wanaku"
+
+- route:
+    id: get-full-db-info
+    from:
+      uri: direct:get-full-db-info
+      steps:
+        - setBody:
+            constant: "SELECT id, name, email FROM users ORDER BY id"
+        - to: "jdbc:testDS"
+        - convertBodyTo:
+            type: java.lang.String
+
+- route:
+    id: custom-query
+    from:
+      uri: direct:custom-query
+      steps:
+        - setBody:
+            simple: "${header.Wanaku.query}"
+        - to: "jdbc:testDS"
+        - convertBodyTo:
+            type: java.lang.String
+
+- route:
+    id: get-email-by-name
+    from:
+      uri: direct:get-email-by-name
+      steps:
+        - setBody:
+            simple: "SELECT email FROM users WHERE name = '${header.Wanaku.name}'"
+        - to: "jdbc:testDS"
+        - convertBodyTo:
+            type: java.lang.String

@@ -1,0 +1,14 @@
+mcp:
+  tools:
+    - hello:
+        route:
+          id: "hello"
+        description: "A friendly greeting tool. Send any message and get a hello back."
+        properties:
+          - name: message
+            type: string
+            description: "Your message"
+            required: true
+            mapping:
+              type: header
+              name: Wanaku.message

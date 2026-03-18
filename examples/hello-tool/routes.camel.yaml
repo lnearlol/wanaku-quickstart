@@ -1,0 +1,9 @@
+- route:
+    id: hello
+    from:
+      uri: direct:hello
+      steps:
+        - setBody:
+            simple: "Hello from Wanaku! You said: ${header.Wanaku.message}"
+        - convertBodyTo:
+            type: java.lang.String

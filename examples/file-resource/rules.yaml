@@ -1,0 +1,6 @@
+mcp:
+  resources:
+    - readme:
+        route:
+          id: "read-file"
+        description: "A sample text resource served by Wanaku"
