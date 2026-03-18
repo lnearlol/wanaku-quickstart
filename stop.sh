@@ -22,13 +22,24 @@ if [ -d "${PIDS}" ]; then
   done
 fi
 
-# Stop Docker containers
-for container in wanaku-keycloak wanaku-postgres; do
-  if docker ps -q --filter "name=${container}" | grep -q .; then
-    echo "Stopping ${container}..."
-    docker rm -f "${container}" > /dev/null 2>&1
-  fi
-done
+# Auto-detect container runtime
+if command -v podman &> /dev/null; then
+  CONTAINER_CMD="podman"
+elif command -v docker &> /dev/null; then
+  CONTAINER_CMD="docker"
+else
+  CONTAINER_CMD=""
+fi
+
+# Stop containers
+if [ -n "${CONTAINER_CMD}" ]; then
+  for container in wanaku-keycloak wanaku-postgres; do
+    if ${CONTAINER_CMD} ps -q --filter "name=${container}" 2>/dev/null | grep -q .; then
+      echo "Stopping ${container}..."
+      ${CONTAINER_CMD} rm -f "${container}" > /dev/null 2>&1
+    fi
+  done
+fi
 
 # Kill any orphan Java processes on our ports
 for port in 8080 9090 9191; do

@@ -19,6 +19,16 @@ PIDS="${DIR}/.pids"
 KEYCLOAK_IMAGE="quay.io/keycloak/keycloak:26.3.5"
 CIC_BASE_PORT=9191
 
+# Auto-detect container runtime (podman or docker)
+if command -v podman &> /dev/null; then
+  CONTAINER_CMD="podman"
+elif command -v docker &> /dev/null; then
+  CONTAINER_CMD="docker"
+else
+  echo "Neither podman nor docker found. Install one and try again."
+  exit 1
+fi
+
 # Default to hello-tool if no args
 if [ $# -eq 0 ]; then
   EXAMPLES=("hello-tool")
@@ -33,8 +43,8 @@ if [ ! -d "${ARTIFACTS}/wanaku-router-backend-0.1.0-SNAPSHOT" ]; then
   exit 1
 fi
 
-if ! docker info > /dev/null 2>&1; then
-  echo "Docker is not running. Start Docker and try again."
+if ! ${CONTAINER_CMD} info > /dev/null 2>&1; then
+  echo "${CONTAINER_CMD} is not running. Start it and try again."
   exit 1
 fi
 
@@ -56,7 +66,7 @@ rm -f "${LOGS}"/*.log
 # ── 1. Keycloak ──────────────────────────────────────────────────────
 
 echo "Starting Keycloak..."
-docker run -d --name wanaku-keycloak \
+${CONTAINER_CMD} run -d --name wanaku-keycloak \
   -p 8543:8080 \
   -e KC_BOOTSTRAP_ADMIN_USERNAME=admin \
   -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin \
@@ -130,7 +140,7 @@ done
 
 if [ "${NEEDS_POSTGRES}" = true ]; then
   echo "Starting PostgreSQL..."
-  docker run -d --name wanaku-postgres \
+  ${CONTAINER_CMD} run -d --name wanaku-postgres \
     -p 5432:5432 \
     -e POSTGRES_DB=wanaku \
     -e POSTGRES_USER=wanaku \
@@ -140,7 +150,7 @@ if [ "${NEEDS_POSTGRES}" = true ]; then
 
   echo "  Waiting for PostgreSQL..."
   for i in $(seq 1 30); do
-    docker exec wanaku-postgres pg_isready -U wanaku > /dev/null 2>&1 && break
+    ${CONTAINER_CMD} exec wanaku-postgres pg_isready -U wanaku > /dev/null 2>&1 && break
     sleep 1
   done
 
@@ -148,7 +158,7 @@ if [ "${NEEDS_POSTGRES}" = true ]; then
   for example in "${EXAMPLES[@]}"; do
     if [ -f "${DIR}/examples/${example}/seed.sql" ]; then
       echo "  Seeding database (${example})..."
-      docker exec -i wanaku-postgres psql -U wanaku -d wanaku < "${DIR}/examples/${example}/seed.sql" > /dev/null 2>&1
+      ${CONTAINER_CMD} exec -i wanaku-postgres psql -U wanaku -d wanaku < "${DIR}/examples/${example}/seed.sql" > /dev/null 2>&1
     fi
   done
 
@@ -222,9 +232,20 @@ for example in "${EXAMPLES[@]}"; do
   echo "    tail -f logs/cic-${example}.log"
 done
 echo ""
-echo "  Try with MCP Inspector:"
-echo "    npx @modelcontextprotocol/inspector"
-echo "    URL: http://localhost:8080/mcp/sse"
+echo "  Run MCP Inspector:  npx @modelcontextprotocol/inspector"
+echo ""
+echo "  Go to MCP Inspector UI: http://localhost:6274"
+echo ""
+echo "    Transport Type:  SSE"
+echo "    Endpoint URL:    http://localhost:8080/mcp/sse"
+echo "    Authentication:  Direct (OAuth)"
+echo "    Client ID:       mcp-client"
+echo "    Client Secret:   (leave empty)"
+echo "    Redirect URI:    http://localhost:6274/oauth/callback"
+echo "    Scope:           openid wanaku-mcp-client"
+echo ""
+echo "  If you get an OAuth error in MCP Inspector:"
+echo "    Open Auth Settings -> Clear OAuth State -> Connect again"
 echo ""
 echo "  Stop:  ./stop.sh"
 echo "========================================="

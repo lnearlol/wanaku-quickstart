@@ -5,7 +5,7 @@ Get Wanaku running in 2 commands.
 ## Prerequisites
 
 - Java 21+
-- Docker
+- Docker or Podman
 
 ## Start
 

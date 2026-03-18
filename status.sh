@@ -16,9 +16,18 @@ check() {
   fi
 }
 
-echo "Docker:"
+# Auto-detect container runtime
+if command -v podman &> /dev/null; then
+  CONTAINER_CMD="podman"
+elif command -v docker &> /dev/null; then
+  CONTAINER_CMD="docker"
+else
+  CONTAINER_CMD=""
+fi
+
+echo "Containers:"
 for container in wanaku-keycloak wanaku-postgres; do
-  if docker ps -q --filter "name=${container}" | grep -q .; then
+  if [ -n "${CONTAINER_CMD}" ] && ${CONTAINER_CMD} ps -q --filter "name=${container}" 2>/dev/null | grep -q .; then
     echo "  ${container}: running"
   else
     echo "  ${container}: stopped"
