@@ -4,7 +4,7 @@
     from:
       uri: file
       parameters:
-        directoryName: examples/file-resource
+        directoryName: camel-integration-capabilities/file-resource
         fileName: readme.txt
         idempotent: false
         noop: true
