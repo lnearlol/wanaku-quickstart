@@ -17,6 +17,7 @@ ARTIFACTS="${DIR}/artifacts"
 LOGS="${DIR}/logs"
 PIDS="${DIR}/.pids"
 KEYCLOAK_IMAGE="quay.io/keycloak/keycloak:26.3.5"
+POSTGRES_IMAGE="docker.io/library/postgres:16"
 CIC_BASE_PORT=9191
 
 # Auto-detect container runtime (podman or docker)
@@ -49,9 +50,9 @@ if ! ${CONTAINER_CMD} info > /dev/null 2>&1; then
 fi
 
 for example in "${EXAMPLES[@]}"; do
-  if [ ! -d "${DIR}/examples/${example}" ]; then
+  if [ ! -d "${DIR}/camel-integration-capabilities/${example}" ]; then
     echo "Example '${example}' not found. Available:"
-    ls "${DIR}/examples/"
+    ls "${DIR}/camel-integration-capabilities/"
     exit 1
   fi
 done
@@ -132,7 +133,7 @@ echo "  Router ready (port 8080)"
 
 NEEDS_POSTGRES=false
 for example in "${EXAMPLES[@]}"; do
-  if [ -f "${DIR}/examples/${example}/seed.sql" ]; then
+  if [ -f "${DIR}/camel-integration-capabilities/${example}/seed.sql" ]; then
     NEEDS_POSTGRES=true
     break
   fi
@@ -145,7 +146,7 @@ if [ "${NEEDS_POSTGRES}" = true ]; then
     -e POSTGRES_DB=wanaku \
     -e POSTGRES_USER=wanaku \
     -e POSTGRES_PASSWORD=wanaku \
-    postgres:16 \
+    "${POSTGRES_IMAGE}" \
     > /dev/null
 
   echo "  Waiting for PostgreSQL..."
@@ -156,9 +157,9 @@ if [ "${NEEDS_POSTGRES}" = true ]; then
 
   # Seed from all examples that have seed.sql
   for example in "${EXAMPLES[@]}"; do
-    if [ -f "${DIR}/examples/${example}/seed.sql" ]; then
+    if [ -f "${DIR}/camel-integration-capabilities/${example}/seed.sql" ]; then
       echo "  Seeding database (${example})..."
-      ${CONTAINER_CMD} exec -i wanaku-postgres psql -U wanaku -d wanaku < "${DIR}/examples/${example}/seed.sql" > /dev/null 2>&1
+      ${CONTAINER_CMD} exec -i wanaku-postgres psql -U wanaku -d wanaku < "${DIR}/camel-integration-capabilities/${example}/seed.sql" > /dev/null 2>&1
     fi
   done
 
@@ -171,7 +172,7 @@ GRPC_PORT=${CIC_BASE_PORT}
 LOADED_EXAMPLES=""
 
 for example in "${EXAMPLES[@]}"; do
-  EXAMPLE_DIR="${DIR}/examples/${example}"
+  EXAMPLE_DIR="${DIR}/camel-integration-capabilities/${example}"
 
   CIC_EXTRA_ARGS=""
   if [ -f "${EXAMPLE_DIR}/dependencies.txt" ]; then
@@ -227,6 +228,7 @@ echo ""
 echo "  Examples loaded:"
 echo -e "${LOADED_EXAMPLES}"
 echo "  Logs:"
+echo "    check in the /logs/ folder manually  or"
 echo "    tail -f logs/router.log"
 for example in "${EXAMPLES[@]}"; do
   echo "    tail -f logs/cic-${example}.log"
@@ -247,5 +249,6 @@ echo ""
 echo "  If you get an OAuth error in MCP Inspector:"
 echo "    Open Auth Settings -> Clear OAuth State -> Connect again"
 echo ""
+echo "  Check the status:  ./status.sh"
 echo "  Stop:  ./stop.sh"
 echo "========================================="
