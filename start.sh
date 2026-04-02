@@ -44,6 +44,12 @@ if [ ! -d "${ARTIFACTS}/wanaku-router-backend-0.1.0-SNAPSHOT" ]; then
   exit 1
 fi
 
+CLI_DIR="${ARTIFACTS}/cli-0.1.0-SNAPSHOT"
+if [ ! -f "${CLI_DIR}/wanaku" ]; then
+  echo "CLI not found. Run ./download.sh first."
+  exit 1
+fi
+
 if ! ${CONTAINER_CMD} info > /dev/null 2>&1; then
   echo "${CONTAINER_CMD} is not running. Start it and try again."
   exit 1
@@ -85,21 +91,17 @@ if ! curl -sf http://localhost:8543/realms/master > /dev/null 2>&1; then
   exit 1
 fi
 
-# Get admin token
-ADMIN_TOKEN=$(curl -s -d 'client_id=admin-cli' -d 'username=admin' -d 'password=admin' -d 'grant_type=password' \
-  http://localhost:8543/realms/master/protocol/openid-connect/token | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
+# Import realm using the Wanaku CLI
+"${CLI_DIR}/wanaku" admin realm create --config "${DIR}/config/wanaku-config.json"
 
-# Import realm
-curl -s -X POST http://localhost:8543/admin/realms \
-  -H "Authorization: Bearer ${ADMIN_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d @"${DIR}/config/wanaku-config.json" > /dev/null
-
-# Create test user
-curl -s -X POST http://localhost:8543/admin/realms/wanaku/users \
-  -H "Authorization: Bearer ${ADMIN_TOKEN}" \
-  -H "Content-Type: application/json" \
-  -d '{"username":"test-user","enabled":true,"emailVerified":true,"firstName":"Test","lastName":"User","email":"test-user@wanaku.local","credentials":[{"type":"password","value":"test-password","temporary":false}]}' > /dev/null
+# Create test user using the Wanaku CLI
+"${CLI_DIR}/wanaku" admin users add \
+  --admin-username admin \
+  --admin-password admin \
+  --keycloak-url http://localhost:8543 \
+  --realm wanaku \
+  --username test-user \
+  --password test-password
 
 echo "  Keycloak ready (port 8543)"
 

@@ -21,5 +21,11 @@ mkdir -p "${ARTIFACTS}/cic"
 curl -fSL -o "${ARTIFACTS}/cic/cic.jar" \
   "https://github.com/wanaku-ai/camel-integration-capability/releases/download/early-access/camel-integration-capability-main-0.1.0-SNAPSHOT-jar-with-dependencies.jar"
 
+echo "Downloading Wanaku CLI..."
+curl -fSL -o "${ARTIFACTS}/cli.zip" \
+  "https://github.com/wanaku-ai/wanaku/releases/download/early-access/cli-0.1.0-SNAPSHOT.zip"
+unzip -o -d "${ARTIFACTS}" "${ARTIFACTS}/cli.zip"
+rm -f "${ARTIFACTS}/cli.zip"
+
 echo ""
 echo "Done! Artifacts in ${ARTIFACTS}/"
