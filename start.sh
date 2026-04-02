@@ -44,8 +44,8 @@ if [ ! -d "${ARTIFACTS}/wanaku-router-backend-0.1.0-SNAPSHOT" ]; then
   exit 1
 fi
 
-CLI_DIR="${ARTIFACTS}/cli-0.1.0-SNAPSHOT"
-if [ ! -f "${CLI_DIR}/wanaku" ]; then
+CLI_JAR="${ARTIFACTS}/wanaku-cli-0.1.0-SNAPSHOT/quarkus-run.jar"
+if [ ! -f "${CLI_JAR}" ]; then
   echo "CLI not found. Run ./download.sh first."
   exit 1
 fi
@@ -73,7 +73,7 @@ rm -f "${LOGS}"/*.log
 # ── 1. Keycloak ──────────────────────────────────────────────────────
 
 echo "Starting Keycloak..."
-${CONTAINER_CMD} run -d --name wanaku-keycloak \
+${CONTAINER_CMD} run -d --rm --name wanaku-keycloak \
   -p 8543:8080 \
   -e KC_BOOTSTRAP_ADMIN_USERNAME=admin \
   -e KC_BOOTSTRAP_ADMIN_PASSWORD=admin \
@@ -92,10 +92,14 @@ if ! curl -sf http://localhost:8543/realms/master > /dev/null 2>&1; then
 fi
 
 # Import realm using the Wanaku CLI
-"${CLI_DIR}/wanaku" admin realm create --config "${DIR}/config/wanaku-config.json"
+java -jar "${CLI_JAR}" admin realm create \
+  --admin-username admin \
+  --admin-password admin \
+  --keycloak-url http://localhost:8543 \
+  --config "${DIR}/config/wanaku-config.json"
 
 # Create test user using the Wanaku CLI
-"${CLI_DIR}/wanaku" admin users add \
+java -jar "${CLI_JAR}" admin users add \
   --admin-username admin \
   --admin-password admin \
   --keycloak-url http://localhost:8543 \
@@ -143,7 +147,7 @@ done
 
 if [ "${NEEDS_POSTGRES}" = true ]; then
   echo "Starting PostgreSQL..."
-  ${CONTAINER_CMD} run -d --name wanaku-postgres \
+  ${CONTAINER_CMD} run -d --rm --name wanaku-postgres \
     -p 5432:5432 \
     -e POSTGRES_DB=wanaku \
     -e POSTGRES_USER=wanaku \
@@ -207,7 +211,7 @@ done
 # Wait for at least one tool to register
 echo "  Waiting for Camel Integration Capability to register..."
 for i in $(seq 1 30); do
-  curl -sf http://localhost:8080/api/v1/tools/list 2>/dev/null | grep -q '"data":\[{' && break
+  curl -sf http://localhost:8080/api/v1/tools 2>/dev/null | grep -q '"data":\[{' && break
   sleep 20
 done
 
