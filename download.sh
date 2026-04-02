@@ -23,7 +23,7 @@ curl -fSL -o "${ARTIFACTS}/cic/cic.jar" \
 
 echo "Downloading Wanaku CLI..."
 curl -fSL -o "${ARTIFACTS}/cli.zip" \
-  "https://github.com/wanaku-ai/wanaku/releases/download/early-access/cli-0.1.0-SNAPSHOT.zip"
+  "https://github.com/wanaku-ai/wanaku/releases/download/early-access/wanaku-cli-0.1.0-SNAPSHOT.zip"
 unzip -o -d "${ARTIFACTS}" "${ARTIFACTS}/cli.zip"
 rm -f "${ARTIFACTS}/cli.zip"
 
